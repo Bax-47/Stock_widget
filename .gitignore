@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+venv/
+
+# Docker
+*.log
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+
+# Byte-compiled
+*.swp

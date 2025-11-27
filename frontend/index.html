@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SmartStock Monitor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Chart.js CDN for the line chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="avatar">SS</div>
+        <div class="user-info">
+          <span class="user-name">Admin</span>
+          <span class="user-role">Stock Monitor</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-target="top">
+          <span class="nav-dot"></span>
+          Dashboard
+        </a>
+        <a href="#" class="nav-item" data-target="section-stocks">
+          <span class="nav-dot"></span>
+          Stocks
+        </a>
+        <a href="#" class="nav-item" data-target="section-alerts">
+          <span class="nav-dot"></span>
+          Alerts
+        </a>
+        <a href="#" class="nav-item" data-target="section-recent-alerts">
+          <span class="nav-dot"></span>
+          Settings
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <span class="sidebar-caption">SmartStock Monitor</span>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="app-title">SmartStock Monitor</h1>
+          <span class="app-subtitle">Real-time Stock Alerts Dashboard</span>
+        </div>
+        <div class="topbar-right">
+          <div class="status-pill" id="ws-status-pill">
+            <span class="status-indicator"></span>
+            <span class="status-text">Connecting...</span>
+          </div>
+          <button class="icon-button" title="View on GitHub">
+            ⌥
+          </button>
+          <button class="icon-button" title="WebEx Bot">
+            💬
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard grid -->
+      <section class="grid">
+
+        <!-- Live Stocks widget -->
+        <section class="card card-wide" id="section-stocks">
+          <header class="card-header">
+            <h2>Live Stocks</h2>
+            <span class="card-subtitle">Real-time prices via WebSocket</span>
+          </header>
+          <div class="card-body">
+            <table class="stocks-table">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>%</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody id="stocks-table-body">
+                <!-- Rows injected by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Chart widget -->
+        <section class="card" id="section-chart">
+          <header class="card-header">
+            <h2>Price Trend</h2>
+            <span class="card-subtitle">
+              <span id="chart-symbol-label">AAPL</span> – last 10 updates
+            </span>
+          </header>
+          <div class="card-body">
+            <canvas id="price-chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Alert rules widget -->
+        <section class="card" id="section-alerts">
+          <header class="card-header">
+            <h2>Alert Rules</h2>
+            <span class="card-subtitle">Configured conditions</span>
+          </header>
+          <div class="card-body">
+            <ul class="alert-rules" id="alert-rules-list">
+              <!-- Example static rules for now -->
+              <li>AAPL &gt; 200 (Notify WebEx)</li>
+              <li>TSLA &lt; 180 (Notify WebEx)</li>
+              <li>NVDA &gt; 1000 (High priority)</li>
+            </ul>
+            <button class="primary-button" disabled>
+              + Add Rule (via API)
+            </button>
+          </div>
+        </section>
+
+        <!-- Recent alerts widget -->
+        <section class="card card-wide" id="section-recent-alerts">
+          <header class="card-header">
+            <h2>Recent Alerts</h2>
+            <span class="card-subtitle">Last triggered events</span>
+          </header>
+          <div class="card-body recent-alerts" id="recent-alerts">
+            <!-- Alerts injected by app.js -->
+          </div>
+        </section>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

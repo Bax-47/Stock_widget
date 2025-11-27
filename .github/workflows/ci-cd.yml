@@ -1,0 +1,111 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Manual trigger if you ever want to run it by hand
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: stock-widget-backend
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ---------------------------
+  # 1) Security + basic checks
+  # ---------------------------
+  security_and_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install backend dependencies + security tools
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install bandit safety
+
+      - name: Bandit security scan (code)
+        working-directory: backend
+        run: |
+          bandit -r . || true
+        # ^ change "|| true" to remove if you want the build to FAIL on findings
+
+      - name: Safety dependency scan
+        working-directory: backend
+        run: |
+          safety check --full-report || true
+        # ^ same note as above
+
+      - name: Simple syntax check (compile all .py files)
+        working-directory: backend
+        run: |
+          python -m compileall .
+
+  # ---------------------------
+  # 2) Build & push Docker image
+  # ---------------------------
+  build_and_push:
+    needs: security_and_tests
+    runs-on: ubuntu-latest
+    # Only push images from main branch
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  # ---------------------------
+  # 3) Deploy to your lab VM
+  # ---------------------------
+  deploy:
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy to remote VM via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            # go to your project folder on the VM (adjust if needed)
+            cd /home/devasc/Stock_widget
+
+            # pull latest code
+            git pull origin main
+
+            # login to Docker Hub (for future image-based deploys)
+            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" -p "${{ secrets.DOCKERHUB_TOKEN }}"
+
+            # restart stack using local docker-compose.yml
+            docker compose down
+            docker compose up -d --build

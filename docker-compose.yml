@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: stocks_redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stocks_backend
+    depends_on:
+      - redis
+    environment:
+      # Redis inside Docker is reachable at hostname "redis"
+      REDIS_URL: "redis://redis:6379/0"
+
+      # Optional: set these here or via .env file (see next step)
+      FINNHUB_TOKEN: "${FINNHUB_TOKEN}"
+      WEBEX_BOT_TOKEN: "${WEBEX_BOT_TOKEN}"
+      WEBEX_ROOM_ID: "${WEBEX_ROOM_ID}"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: nginx:alpine
+    container_name: stocks_frontend
+    depends_on:
+      - backend
+    volumes:
+      # Serve your static files from /usr/share/nginx/html
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
